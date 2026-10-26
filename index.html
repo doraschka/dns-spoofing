@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="de" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Mail-Sicherheit: SPF, DKIM & DMARC - Interaktives Lernmodul</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#2563eb',
+                        brandCyan: '#0891b2',
+                        brandEmerald: '#059669',
+                        brandPurple: '#7c3aed',
+                        brandRose: '#e11d48'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .glow-blue {
+            box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white">
+
+    <!-- Header -->
+    <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-blue-600 via-purple-600 to-cyan-500 text-white p-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg leading-tight tracking-tight text-slate-900">E-Mail Security Kompakt</h1>
+                    <p class="text-xs text-blue-600 font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-ping"></span>
+                        SPF &bull; DKIM &bull; DMARC
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button id="btnNavVideo" onclick="switchTab('video')" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-play"></i> Erklärvideo
+                </button>
+                <button id="btnNavSim" onclick="switchTab('sim')" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-flask"></i> Header-Simulator
+                </button>
+                <button id="btnNavDns" onclick="switchTab('dns')" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-code"></i> DNS-Generator
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-grow flex flex-col justify-center gap-8">
+        
+        <!-- SECTION 1: INTERACTIVE VIDEO PLAYER -->
+        <div id="sectionVideo" class="flex flex-col gap-4">
+            
+            <!-- Video Player Window -->
+            <div class="relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden aspect-video max-h-[640px] flex flex-col justify-between glass-panel glow-blue">
+                
+                <!-- Video Stage -->
+                <div id="videoStage" class="relative flex-grow flex items-center justify-center p-6 overflow-hidden select-none">
+                    
+                    <!-- Ambient Glow Effects -->
+                    <div class="absolute -top-24 -left-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <!-- Scene 1: Das Problem (E-Mail Spoofing) -->
+                    <div id="scene1" class="scene-content text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-rose-100 text-rose-700 border border-rose-200">Problem</span>
+                            <span class="text-xs text-slate-500">E-Mail Spoofing &amp; Phishing</span>
+                        </div>
+                        <h2 class="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Das SMTP-Grundproblem: Absender sind fälschbar</h2>
+                        
+                        <div class="w-full flex flex-col md:flex-row items-center justify-center gap-4 my-2">
+                            <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center w-full md:w-52 shadow-sm">
+                                <span class="text-[10px] text-rose-700 font-mono uppercase block mb-1">Krimineller Angreifer</span>
+                                <span class="text-xs font-bold text-slate-800 block">Absender: chef@deine-firma.de</span>
+                                <span class="text-[10px] text-rose-600 block mt-1">Gefälschter Briefkopf (Spoofing)</span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center text-rose-500 my-1 md:my-0">
+                                <i class="fa-solid fa-paper-plane text-2xl animate-pulse"></i>
+                                <span class="text-[10px] font-mono text-slate-500 mt-1">Ungeprüfter Versand</span>
+                            </div>
+
+                            <div class="bg-slate-100 border border-slate-300 p-4 rounded-xl text-center w-full md:w-52 shadow-inner">
+                                <span class="text-[10px] text-slate-500 font-mono uppercase block mb-1">Empfänger-Server</span>
+                                <span class="text-xs font-semibold text-slate-700">Glaubt dem Absender blind</span>
+                                <span class="text-[10px] text-slate-500 block mt-1">Keine Standard-Prüfung in SMTP</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            Das klassische E-Mail-Protokoll (SMTP) vergleicht nicht, ob der Absender wirklich berechtigt ist. Angreifer können beliebige E-Mail-Adressen vortäuschen.
+                        </p>
+                    </div>
+
+                    <!-- Scene 2: SPF (Sender Policy Framework) -->
+                    <div id="scene2" class="scene-content hidden text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-blue-100 text-blue-700 border border-blue-200">Baustein 1</span>
+                            <span class="text-xs text-slate-500">SPF (Sender Policy Framework)</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Wer darf Mails für meine Domain senden?</h2>
+
+                        <div class="w-full max-w-lg bg-slate-100 border border-slate-300 p-4 rounded-xl shadow-inner my-1 flex flex-col items-center gap-3">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">SPF TXT-Record im DNS deiner Domain</span>
+                            <div class="bg-white border border-blue-200 px-4 py-2.5 rounded-xl shadow-sm text-blue-800 font-mono font-bold text-xs md:text-sm break-all">
+                                v=spf1 ip4:192.0.2.1 include:_spf.google.com ~all
+                            </div>
+                            <div class="flex items-center justify-center gap-4 text-xs font-mono text-slate-600 mt-1">
+                                <span class="flex items-center gap-1 text-emerald-700 font-bold"><i class="fa-solid fa-check"></i> IP erlaubt</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="flex items-center gap-1 text-rose-600 font-bold"><i class="fa-solid fa-xmark"></i> Fremde IP = Fail</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            Mit <strong class="text-blue-600">SPF</strong> hinterlegst du im DNS eine Gästeliste aller Server-IPs, die offiziell E-Mails im Namen deiner Domain verschicken dürfen.
+                        </p>
+                    </div>
+
+                    <!-- Scene 3: DKIM (DomainKeys Identified Mail) -->
+                    <div id="scene3" class="scene-content hidden text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-purple-100 text-purple-700 border border-purple-200">Baustein 2</span>
+                            <span class="text-xs text-slate-500">DKIM (DomainKeys Identified Mail)</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Kryptographisches Siegel gegen Manipulation</h2>
+
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-4 w-full max-w-md my-1">
+                            <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl flex-1 w-full text-center shadow-sm">
+                                <span class="text-xs font-bold text-purple-700 block mb-1">Sender-Server</span>
+                                <span class="text-[10px] text-slate-500 font-mono">Privater Schlüssel</span>
+                                <i class="fa-solid fa-signature block my-2 text-purple-600 text-lg"></i>
+                                <span class="text-[11px] font-mono text-purple-800">Erzeugt DKIM-Signatur</span>
+                            </div>
+
+                            <div class="text-purple-600 text-xl font-bold">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+
+                            <div class="bg-slate-100 border border-slate-300 p-4 rounded-xl flex-1 w-full text-center">
+                                <span class="text-xs font-bold text-slate-700 block mb-1">Empfänger-Server</span>
+                                <span class="text-[10px] text-slate-500 font-mono">Öffentlicher DNS-Key</span>
+                                <i class="fa-solid fa-key block my-2 text-slate-500 text-lg"></i>
+                                <span class="text-[11px] font-mono text-emerald-700">Verifiziert Unverfälschtheit</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            <strong class="text-purple-600">DKIM</strong> versieht jede E-Mail mit einer digitalen Signatur. Der Empfänger prüft per DNS-Public-Key, ob der Inhalt unterwegs verändert wurde.
+                        </p>
+                    </div>
+
+                    <!-- Scene 4: DMARC (Policy & Alignment) -->
+                    <div id="scene4" class="scene-content hidden text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-cyan-100 text-cyan-700 border border-cyan-200">Baustein 3</span>
+                            <span class="text-xs text-slate-500">DMARC (Reporting &amp; Enforcement)</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Anweisungen &amp; Berichte für den Empfänger</h2>
+
+                        <div class="w-full max-w-lg grid grid-cols-3 gap-3 my-1">
+                            <div class="bg-slate-100 border border-slate-300 p-3 rounded-xl text-center">
+                                <span class="text-xs font-bold text-slate-700 block font-mono">p=none</span>
+                                <span class="text-[10px] text-slate-500 block mt-1">Nur beobachten &amp; Berichte empfangen</span>
+                            </div>
+                            <div class="bg-amber-50 border border-amber-300 p-3 rounded-xl text-center shadow-sm">
+                                <span class="text-xs font-bold text-amber-700 block font-mono">p=quarantine</span>
+                                <span class="text-[10px] text-slate-600 block mt-1">Verdächtige Mails in den Spam-Ordner</span>
+                            </div>
+                            <div class="bg-rose-50 border border-rose-300 p-3 rounded-xl text-center shadow-sm">
+                                <span class="text-xs font-bold text-rose-700 block font-mono">p=reject</span>
+                                <span class="text-[10px] text-slate-600 block mt-1">Ungültige Mails sofort ablehnen</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            <strong class="text-cyan-700">DMARC</strong> verbindet SPF &amp; DKIM. Es schreibt dem Empfänger vor, was bei Fehlordnungen passieren soll, und verlangt **Domain Alignment** (gleiche Absender-Domain im Header &amp; DNS).
+                        </p>
+                    </div>
+
+                    <!-- Scene 5: Zusammenspiel der 3 Standards -->
+                    <div id="scene5" class="scene-content hidden text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200">Kombination</span>
+                            <span class="text-xs text-slate-500">Der 3-stufige Schutzwall</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Wie SPF, DKIM &amp; DMARC zusammenarbeiten</h2>
+
+                        <div class="w-full max-w-lg bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col gap-2 shadow-sm text-left font-mono text-xs">
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                                <span>1. SPF Check: Ist Absender-IP ermächtigt?</span>
+                                <span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> PASS</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                                <span>2. DKIM Check: Ist Signatur unverfälscht?</span>
+                                <span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> PASS</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                                <span>3. DMARC Alignment: Passen Domains zusammen?</span>
+                                <span class="text-emerald-600 font-bold"><i class="fa-solid fa-shield-cat text-blue-600"></i> DELIVER</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            Erst das Zusammenspiel sorgt für maximale **Zustellbarkeit eigener Mails (Deliverability)** und schützt die eigene Marke vor Missbrauch im Phishing.
+                        </p>
+                    </div>
+
+                    <!-- Scene 6: Zusammenfassung & Vorteile -->
+                    <div id="scene6" class="scene-content hidden text-center max-w-3xl flex flex-col items-center gap-6 transition-all duration-500">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-blue-100 text-blue-700 border border-blue-200">Fazit</span>
+                            <span class="text-xs text-slate-500">Best Practices</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Vorteile auf einen Blick</h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-lg text-left">
+                            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="text-xs font-bold text-blue-600 block mb-1"><i class="fa-solid fa-lock"></i> Absender-Schutz</span>
+                                <span class="text-[11px] text-slate-600">Verhindert Phishing &amp; Fälschungen im Namen deiner Firma.</span>
+                            </div>
+                            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="text-xs font-bold text-emerald-600 block mb-1"><i class="fa-solid fa-inbox"></i> Bessere Posteingangs-Quote</span>
+                                <span class="text-[11px] text-slate-600">Landet seltener im Spam-Ordner von Gmail &amp; Outlook.</span>
+                            </div>
+                            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="text-xs font-bold text-purple-600 block mb-1"><i class="fa-solid fa-chart-line"></i> Volle Kontrolle</span>
+                                <span class="text-[11px] text-slate-600">DMARC-Berichte zeigen Missbrauchsversuche auf.</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-600 text-xs md:text-sm max-w-xl leading-relaxed">
+                            Moderne Provider wie Google, Yahoo und Microsoft setzen SPF, DKIM und DMARC inzwischen für professionelle Absender zwingend voraus!
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Subtitles / Speaker Voice Box -->
+                <div class="bg-slate-50 border-t border-slate-200 p-4 min-h-[85px] flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-600 flex items-center justify-center flex-shrink-0 text-lg">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <span id="subtitleTitle" class="text-[10px] uppercase tracking-wider font-extrabold text-blue-700 block mb-0.5">Lektion 1</span>
+                        <p id="speakerText" class="text-xs md:text-sm text-slate-700 font-medium leading-snug">
+                            Willkommen! In diesem Lernvideo erklären wir die Funktionsweise von SPF, DKIM und DMARC.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Video Control Bar -->
+                <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex flex-col gap-2">
+                    <div class="w-full bg-slate-300 h-2 rounded-full overflow-hidden cursor-pointer" id="progressContainer" onclick="seekVideo(event)">
+                        <div id="progressBar" class="bg-gradient-to-r from-blue-600 to-cyan-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-1">
+                        <div class="flex items-center gap-3">
+                            <button id="btnPrev" onclick="prevScene()" class="p-2 text-slate-500 hover:text-slate-900 transition disabled:opacity-30">
+                                <i class="fa-solid fa-backward-step text-base"></i>
+                            </button>
+                            <button id="btnPlay" onclick="togglePlay()" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white hover:opacity-90 transition flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+                                <i id="playIcon" class="fa-solid fa-play ml-0.5 text-sm"></i>
+                            </button>
+                            <button id="btnNext" onclick="nextScene()" class="p-2 text-slate-500 hover:text-slate-900 transition disabled:opacity-30">
+                                <i class="fa-solid fa-forward-step text-base"></i>
+                            </button>
+                            <span id="timeDisplay" class="text-xs text-slate-500 font-mono ml-2">00:00 / 00:42</span>
+                        </div>
+
+                        <!-- Chapter Dots -->
+                        <div class="flex items-center gap-1.5" id="sceneDots"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION 2: INTERACTIVE EMAIL HEADER SIMULATOR -->
+        <div id="sectionSim" class="hidden flex-col gap-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl glass-panel">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-6 border-b border-slate-200">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
+                            <i class="fa-solid fa-envelope-open-text text-blue-600"></i> E-Mail-Header &amp; Spam-Filter Simulator
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Testen Sie live, wie verschiedene SPF, DKIM und DMARC Konfigurationen vom Empfänger verarbeitet werden.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="setScenario('legit')" class="px-3 py-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-semibold rounded-lg hover:bg-emerald-200 transition">Legitime Mail</button>
+                        <button onclick="setScenario('spoof')" class="px-3 py-1.5 bg-rose-100 border border-rose-300 text-rose-800 text-xs font-semibold rounded-lg hover:bg-rose-200 transition">Spoofing-Angriff</button>
+                    </div>
+                </div>
+
+                <!-- Simulation Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-network-wired"></i> 1. SPF-Prüfung
+                        </label>
+                        <div>
+                            <span class="text-[11px] text-slate-500 block mb-1">Absender Server-IP erlaubt?</span>
+                            <select id="simSpf" onchange="runSimulation()" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-blue-500">
+                                <option value="pass">PASS (IP steht im SPF TXT Record)</option>
+                                <option value="fail">FAIL (IP ist nicht berechtigt)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold text-purple-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-key"></i> 2. DKIM-Prüfung
+                        </label>
+                        <div>
+                            <span class="text-[11px] text-slate-500 block mb-1">Digitale Signatur gültig?</span>
+                            <select id="simDkim" onchange="runSimulation()" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-purple-500">
+                                <option value="pass">PASS (Signatur mit DNS Key verifiziert)</option>
+                                <option value="fail">FAIL (Fehlende oder ungültige Signatur)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold text-cyan-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-gavel"></i> 3. DMARC Policy
+                        </label>
+                        <div>
+                            <span class="text-[11px] text-slate-500 block mb-1">Eingestelltes DMARC-Verhalten:</span>
+                            <select id="simDmarc" onchange="runSimulation()" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-cyan-500">
+                                <option value="none">p=none (Nur Protokollierung / Berichte)</option>
+                                <option value="quarantine">p=quarantine (Spam-Ordner)</option>
+                                <option value="reject">p=reject (Vollständig Ablehnen)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Output Status -->
+                <div class="mt-6 flex flex-col gap-3">
+                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Ergebnis beim Empfänger (Mailserver Decision Log):</span>
+                    
+                    <div id="simResultBox" class="p-5 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div id="simIcon" class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white font-bold flex-shrink-0">
+                                <i class="fa-solid fa-inbox"></i>
+                            </div>
+                            <div>
+                                <h3 id="simStatusTitle" class="font-extrabold text-lg">E-Mail Erfolgreich Zugestellt</h3>
+                                <p id="simStatusDesc" class="text-xs mt-0.5">Sowohl SPF als auch DKIM sind gültig. Die Nachricht wird direkt im Haupt-Posteingang abgelegt.</p>
+                            </div>
+                        </div>
+
+                        <div id="simBadge" class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider border">
+                            INBOX DELIVER
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION 3: DNS RECORD GENERATOR -->
+        <div id="sectionDns" class="hidden flex-col gap-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl glass-panel flex flex-col gap-6">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
+                        <i class="fa-solid fa-terminal text-emerald-600"></i> DNS-Record Generator &amp; Vorschau
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Generieren Sie Beispiel-DNS-Einträge für Ihre eigene Domain zur Einrichtung von SPF, DKIM und DMARC.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-700">Ihre Domain-Name:</label>
+                            <input id="dnsDomain" type="text" value="beispiel-firma.de" oninput="generateDns()" class="bg-white border border-slate-300 rounded-lg p-2.5 text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-700">DMARC Modus (p=):</label>
+                            <select id="dnsPolicy" onchange="generateDns()" class="bg-white border border-slate-300 rounded-lg p-2.5 text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500">
+                                <option value="none">none (Empfohlen für den Start)</option>
+                                <option value="quarantine">quarantine (Spam-Ordner)</option>
+                                <option value="reject">reject (Maximaler Schutz)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 justify-center">
+                        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs flex flex-col gap-3 shadow-inner">
+                            <div>
+                                <span class="text-slate-400 text-[10px] uppercase block">// 1. SPF Record (TXT @)</span>
+                                <span id="outSpf" class="text-cyan-400 break-all">v=spf1 mx include:_spf.google.com ~all</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] uppercase block">// 2. DKIM Record (TXT default._domainkey)</span>
+                                <span id="outDkim" class="text-purple-400 break-all">v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQ...</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] uppercase block">// 3. DMARC Record (TXT _dmarc)</span>
+                                <span id="outDmarc" class="text-emerald-400 break-all">v=DMARC1; p=none; rua=mailto:dmarc-reports@beispiel-firma.de;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 bg-white py-4 px-6 text-center text-xs text-slate-500">
+        <p>Interaktives Lernmodul E-Mail-Sicherheit &bull; SPF, DKIM und DMARC</p>
+    </footer>
+
+    <script>
+        const SCENES = [
+            { id: 1, duration: 7, title: "Lektion 1: Das Problem", subtitle: "E-Mail Spoofing", text: "Im ursprünglichen SMTP-Standard fehlt eine Prüfung des Absenders. Angreifer können leicht fremde Absenderadressen vortäuschen." },
+            { id: 2, duration: 7, title: "Lektion 2: SPF", subtitle: "Sender Policy Framework", text: "SPF legt im DNS fest, welche Mailserver-IPs offiziell berechtigt sind, E-Mails im Namen deiner Domain zu versenden." },
+            { id: 3, duration: 7, title: "Lektion 3: DKIM", subtitle: "DomainKeys Identified Mail", text: "DKIM fuegt jeder E-Mail eine kryptographische Signatur hinzu. Der Empfänger verifiziert damit die Unverfälschtheit des Inhalts." },
+            { id: 4, duration: 7, title: "Lektion 4: DMARC", subtitle: "Richtlinien & Reports", text: "DMARC verknüpft SPF und DKIM. Es weist den Empfänger an, wie mit gefälschten Mails umzugehen ist (none, quarantine, reject)." },
+            { id: 5, duration: 7, title: "Lektion 5: Zusammenspiel", subtitle: "Der 3-stufige Schutzwall", text: "Nur wenn SPF, DKIM und DMARC gemeinsam konfiguriert sind, ist deine Domain vor Missbrauch geschützt und deine Mails kommen sicher an." },
+            { id: 6, duration: 7, title: "Lektion 6: Fazit", subtitle: "Best Practices", text: "Große E-Mail-Provider wie Google und Microsoft verlangen SPF, DKIM und DMARC inzwischen als Pflichtstandard für Absender." }
+        ];
+
+        let currentSceneIdx = 0;
+        let isPlaying = false;
+        let sceneTimer = null;
+        let sceneProgressInterval = null;
+
+        const sceneElements = [
+            document.getElementById('scene1'),
+            document.getElementById('scene2'),
+            document.getElementById('scene3'),
+            document.getElementById('scene4'),
+            document.getElementById('scene5'),
+            document.getElementById('scene6')
+        ];
+
+        const speakerText = document.getElementById('speakerText');
+        const subtitleTitle = document.getElementById('subtitleTitle');
+        const playIcon = document.getElementById('playIcon');
+        const progressBar = document.getElementById('progressBar');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const sceneDots = document.getElementById('sceneDots');
+
+        window.onload = function() {
+            initDots();
+            renderScene(0);
+            runSimulation();
+            generateDns();
+        };
+
+        function switchTab(tab) {
+            const btnVideo = document.getElementById('btnNavVideo');
+            const btnSim = document.getElementById('btnNavSim');
+            const btnDns = document.getElementById('btnNavDns');
+            
+            const secVideo = document.getElementById('sectionVideo');
+            const secSim = document.getElementById('sectionSim');
+            const secDns = document.getElementById('sectionDns');
+
+            secVideo.classList.add('hidden');
+            secSim.classList.add('hidden');
+            secDns.classList.add('hidden');
+
+            btnVideo.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition flex items-center gap-2";
+            btnSim.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition flex items-center gap-2";
+            btnDns.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition flex items-center gap-2";
+
+            if (tab === 'video') {
+                secVideo.classList.remove('hidden');
+                btnVideo.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white transition flex items-center gap-2 shadow-lg shadow-blue-500/20";
+            } else if (tab === 'sim') {
+                pauseVideo();
+                secSim.classList.remove('hidden');
+                btnSim.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white transition flex items-center gap-2 shadow-lg shadow-blue-500/20";
+            } else if (tab === 'dns') {
+                pauseVideo();
+                secDns.classList.remove('hidden');
+                btnDns.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white transition flex items-center gap-2 shadow-lg shadow-blue-500/20";
+            }
+        }
+
+        function initDots() {
+            sceneDots.innerHTML = '';
+            SCENES.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all ${idx === 0 ? 'bg-blue-600 w-6' : 'bg-slate-300'}`;
+                dot.onclick = () => jumpToScene(idx);
+                sceneDots.appendChild(dot);
+            });
+        }
+
+        function renderScene(idx) {
+            currentSceneIdx = idx;
+
+            sceneElements.forEach((el, index) => {
+                if (index === idx) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            subtitleTitle.innerText = `${SCENES[idx].title} – ${SCENES[idx].subtitle}`;
+            speakerText.innerText = SCENES[idx].text;
+
+            Array.from(sceneDots.children).forEach((dot, index) => {
+                dot.className = `h-2.5 rounded-full transition-all ${index === idx ? 'bg-blue-600 w-6' : 'bg-slate-300 w-2.5'}`;
+            });
+
+            const totalDur = SCENES.reduce((a, b) => a + b.duration, 0);
+            const passedDur = SCENES.slice(0, idx).reduce((a, b) => a + b.duration, 0);
+            timeDisplay.innerText = `00:${passedDur < 10 ? '0' + passedDur : passedDur} / 00:${totalDur}`;
+
+            document.getElementById('btnPrev').disabled = idx === 0;
+            document.getElementById('btnNext').disabled = idx === SCENES.length - 1;
+        }
+
+        function togglePlay() {
+            if (isPlaying) pauseVideo();
+            else startVideo();
+        }
+
+        function startVideo() {
+            isPlaying = true;
+            playIcon.className = "fa-solid fa-pause text-sm";
+            runPlaybackLoop();
+        }
+
+        function pauseVideo() {
+            isPlaying = false;
+            playIcon.className = "fa-solid fa-play ml-0.5 text-sm";
+            clearTimeout(sceneTimer);
+            clearInterval(sceneProgressInterval);
+        }
+
+        function jumpToScene(idx) {
+            pauseVideo();
+            renderScene(idx);
+            updateProgressBar(idx, 0);
+        }
+
+        function nextScene() {
+            if (currentSceneIdx < SCENES.length - 1) jumpToScene(currentSceneIdx + 1);
+        }
+
+        function prevScene() {
+            if (currentSceneIdx > 0) jumpToScene(currentSceneIdx - 1);
+        }
+
+        function runPlaybackLoop() {
+            if (!isPlaying) return;
+
+            let startTime = Date.now();
+            let durationMs = SCENES[currentSceneIdx].duration * 1000;
+
+            clearInterval(sceneProgressInterval);
+            sceneProgressInterval = setInterval(() => {
+                let elapsed = Date.now() - startTime;
+                let progressPercent = Math.min((elapsed / durationMs) * 100, 100);
+                updateProgressBar(currentSceneIdx, progressPercent);
+            }, 50);
+
+            clearTimeout(sceneTimer);
+            sceneTimer = setTimeout(() => {
+                if (currentSceneIdx < SCENES.length - 1) {
+                    renderScene(currentSceneIdx + 1);
+                    runPlaybackLoop();
+                } else {
+                    pauseVideo();
+                    updateProgressBar(SCENES.length - 1, 100);
+                }
+            }, durationMs);
+        }
+
+        function updateProgressBar(sceneIdx, scenePercent) {
+            let totalDur = SCENES.reduce((a, b) => a + b.duration, 0);
+            let passedDur = SCENES.slice(0, sceneIdx).reduce((a, b) => a + b.duration, 0);
+            let currentSceneDur = SCENES[sceneIdx].duration;
+
+            let currentTotalSeconds = passedDur + (currentSceneDur * (scenePercent / 100));
+            let overallPercent = (currentTotalSeconds / totalDur) * 100;
+
+            progressBar.style.width = `${overallPercent}%`;
+            let currentSecFormatted = Math.floor(currentTotalSeconds);
+            timeDisplay.innerText = `00:${currentSecFormatted < 10 ? '0' + currentSecFormatted : currentSecFormatted} / 00:${totalDur}`;
+        }
+
+        function seekVideo(event) {
+            let container = document.getElementById('progressContainer');
+            let rect = container.getBoundingClientRect();
+            let clickX = event.clientX - rect.left;
+            let ratio = clickX / rect.width;
+
+            let totalDur = SCENES.reduce((a, b) => a + b.duration, 0);
+            let targetSeconds = totalDur * ratio;
+
+            let accumulated = 0;
+            for (let i = 0; i < SCENES.length; i++) {
+                if (targetSeconds <= accumulated + SCENES[i].duration) {
+                    jumpToScene(i);
+                    let localPercent = ((targetSeconds - accumulated) / SCENES[i].duration) * 100;
+                    updateProgressBar(i, localPercent);
+                    break;
+                }
+                accumulated += SCENES[i].duration;
+            }
+        }
+
+        // --- SIMULATOR LOGIC ---
+        function runSimulation() {
+            const spf = document.getElementById('simSpf').value;
+            const dkim = document.getElementById('simDkim').value;
+            const dmarc = document.getElementById('simDmarc').value;
+
+            const box = document.getElementById('simResultBox');
+            const icon = document.getElementById('simIcon');
+            const title = document.getElementById('simStatusTitle');
+            const desc = document.getElementById('simStatusDesc');
+            const badge = document.getElementById('simBadge');
+
+            if (spf === 'pass' && dkim === 'pass') {
+                box.className = "p-5 rounded-xl border border-emerald-300 bg-emerald-50 flex flex-col md:flex-row items-center justify-between gap-4 transition-all";
+                icon.className = "w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white font-bold flex-shrink-0 bg-emerald-600";
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                title.innerText = "E-Mail Erfolgreich Zugestellt (Inbox)";
+                desc.innerText = "Sowohl SPF als auch DKIM sind gültig. Die Authentifizierung war vollkommen erfolgreich.";
+                badge.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider border bg-white border-emerald-300 text-emerald-800";
+                badge.innerText = "DELIVER (INBOX)";
+            } else if (dmarc === 'none') {
+                box.className = "p-5 rounded-xl border border-amber-300 bg-amber-50 flex flex-col md:flex-row items-center justify-between gap-4 transition-all";
+                icon.className = "w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white font-bold flex-shrink-0 bg-amber-500";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title.innerText = "Zugestellt (Trotz Fehler wegen p=none)";
+                desc.innerText = "SPF oder DKIM schlug fehl. Da DMARC auf 'p=none' steht, wird die Mail dennoch zugestellt, aber der Fehler wird im DMARC-Report erfasst.";
+                badge.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider border bg-white border-amber-300 text-amber-800";
+                badge.innerText = "DELIVERED + REPORTED";
+            } else if (dmarc === 'quarantine') {
+                box.className = "p-5 rounded-xl border border-amber-400 bg-amber-100/70 flex flex-col md:flex-row items-center justify-between gap-4 transition-all";
+                icon.className = "w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white font-bold flex-shrink-0 bg-amber-600";
+                icon.innerHTML = '<i class="fa-solid fa-box-archive"></i>';
+                title.innerText = "In Spam- / Junk-Ordner Verschoben";
+                desc.innerText = "Die Authentifizierung schlug fehl. DMARC Anweisung 'p=quarantine' greift: Die E-Mail wird isoliert.";
+                badge.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider border bg-white border-amber-400 text-amber-900";
+                badge.innerText = "QUARANTINE (SPAM)";
+            } else if (dmarc === 'reject') {
+                box.className = "p-5 rounded-xl border border-rose-300 bg-rose-50 flex flex-col md:flex-row items-center justify-between gap-4 transition-all";
+                icon.className = "w-12 h-12 rounded-xl flex items-center justify-center text-2xl text-white font-bold flex-shrink-0 bg-rose-600";
+                icon.innerHTML = '<i class="fa-solid fa-ban"></i>';
+                title.innerText = "E-Mail Blockiert & Abgelehnt";
+                desc.innerText = "Die Authentifizierung schlug fehl. DMARC Anweisung 'p=reject' greift: Die Mail wird vom Server abgewiesen.";
+                badge.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider border bg-white border-rose-300 text-rose-800";
+                badge.innerText = "REJECTED (BLOCKED)";
+            }
+        }
+
+        function setScenario(type) {
+            if (type === 'legit') {
+                document.getElementById('simSpf').value = 'pass';
+                document.getElementById('simDkim').value = 'pass';
+                document.getElementById('simDmarc').value = 'quarantine';
+            } else {
+                document.getElementById('simSpf').value = 'fail';
+                document.getElementById('simDkim').value = 'fail';
+                document.getElementById('simDmarc').value = 'reject';
+            }
+            runSimulation();
+        }
+
+        // --- DNS GENERATOR LOGIC ---
+        function generateDns() {
+            const domain = document.getElementById('dnsDomain').value.trim() || 'beispiel-firma.de';
+            const policy = document.getElementById('dnsPolicy').value;
+
+            document.getElementById('outSpf').innerText = `v=spf1 mx include:_spf.google.com ~all`;
+            document.getElementById('outDkim').innerText = `v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQ...`;
+            document.getElementById('outDmarc').innerText = `v=DMARC1; p=${policy}; rua=mailto:dmarc-reports@${domain};`;
+        }
+    </script>
+</body>
+</html>
